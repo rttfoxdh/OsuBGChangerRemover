@@ -1,4 +1,4 @@
-# OsuBGChangerRemover
+# OsuBGChangerRemover by rttfoxdh
 
 Simple osu! background changer/remover.
 
