@@ -54,9 +54,6 @@ namespace OsuBackgroundChanger
                             }
                             if (bakcheck == 1)
                             {
-                                string text = File.ReadAllText(file);
-                                text = text.Replace(foundedbg, bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
-                                File.WriteAllText(file, text);
                                 if (onlyonetime == 1)
                                 {
                                     if (File.Exists(folder + "\\" + foundedbg) == true)
@@ -70,7 +67,6 @@ namespace OsuBackgroundChanger
                                         File.Copy(bgfile, folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
                                     onlyonetime = 0;
                                 }
-                                continue;
                             }
                             if (foundedbg == "")
                             {
@@ -247,8 +243,13 @@ namespace OsuBackgroundChanger
                                 }
                             }
                         }
-                        if (bakcheck == 1)
-                            File.Delete(folder + "\\" + foundedbg);
+                        if (bakcheck == 1 & foundedbg != "")
+                        {
+                            if (File.Exists(folder + "\\" + foundedbg) == true)
+                            {
+                                File.Delete(folder + "\\" + foundedbg);
+                            }
+                        }
                     }
                 }
                 Success();
@@ -259,64 +260,132 @@ namespace OsuBackgroundChanger
         {
             foreach (string folder in Directory.GetDirectories(folderlocation))
             {
-                string restoredfilename = "";
+                int bakcheck = 0;
                 foreach (string file in Directory.GetFiles(folder))
                 {
-                    string bakfilename = "";
                     if (file.IndexOf(".bak") > -1)
+                        bakcheck = 1;
+                }
+                if (bakcheck == 1)
+                {
+                    string restoredfilename = "";
+                    int numberofbakfiles = 0;
+                    foreach (string file in Directory.GetFiles(folder))
                     {
-                        bakfilename = file;
+                        string bakfilename = "";
+                        if (file.IndexOf(".bak") > -1)
+                            bakfilename = file;
+                        if (bakfilename != "")
+                        {
+                            bakfilename = bakfilename.Remove(bakfilename.IndexOf(".~!"));
+                            bakfilename = bakfilename.Remove(0, bakfilename.LastIndexOf("\\") + 1);
+                            string[] bakfilenamesplited = bakfilename.Split('&');
+                            numberofbakfiles += bakfilenamesplited.Length;
+                        }
                     }
-                    if (bakfilename != "")
+                    string[] allbakfilenames = new string[numberofbakfiles];
+                    string[] allrestoredfilenames = new string[numberofbakfiles];
+                    foreach (string file in Directory.GetFiles(folder))
                     {
-                        restoredfilename = bakfilename.Remove(0, bakfilename.IndexOf(".~!") + 3).Remove(bakfilename.Remove(0, bakfilename.IndexOf(".~!") + 3).LastIndexOf("."));
-                        if (File.Exists(folder + "\\" + restoredfilename) == true & File.Exists(bakfilename) == true)
+                        string bakfilename = "";
+                        string _restoredfilename = "";
+                        if (file.IndexOf(".bak") > -1)
+                            bakfilename = file;
+                        if (bakfilename != "")
                         {
-                            File.Delete(folder + "\\" + restoredfilename);
-                            File.Copy(bakfilename, folder + "\\" + restoredfilename);
-                            File.Delete(bakfilename);
-                        }
-                        if (File.Exists(folder + "\\" + restoredfilename) == false & File.Exists(bakfilename) == true)
-                        {
-                            File.Copy(bakfilename, folder + "\\" + restoredfilename);
-                            File.Delete(bakfilename);
-                        }
-                        bakfilename = bakfilename.Remove(bakfilename.IndexOf(".~!"));
-                        bakfilename = bakfilename.Remove(0, bakfilename.LastIndexOf("\\") + 1);
-                        string[] bakfilenamesplited = bakfilename.Split('&');
-                        foreach (string osufilename in bakfilenamesplited)
-                        {
-                            string foundedbg = "";
-                            foreach (string _file in Directory.GetFiles(folder))
+                            _restoredfilename = bakfilename.Remove(0, bakfilename.IndexOf(".~!") + 3).Remove(bakfilename.Remove(0, bakfilename.IndexOf(".~!") + 3).LastIndexOf("."));
+                            allrestoredfilenames.SetValue(_restoredfilename, Array.IndexOf(allrestoredfilenames, null));
+                            bakfilename = bakfilename.Remove(bakfilename.IndexOf(".~!"));
+                            bakfilename = bakfilename.Remove(0, bakfilename.LastIndexOf("\\") + 1);
+                            string[] bakfilenamesplited = bakfilename.Split('&');
+                            foreach (string name in bakfilenamesplited)
                             {
-                                if (_file.IndexOf(osufilename) > -1)
+                                allbakfilenames.SetValue(name, Array.IndexOf(allbakfilenames, null));
+                            }
+                        }
+                    }
+                    foreach (string file in Directory.GetFiles(folder))
+                    {
+                        string bakfilename = "";
+                        if (file.IndexOf(".bak") > -1)
+                            bakfilename = file;
+                        if (bakfilename != "")
+                        {
+                            restoredfilename = bakfilename.Remove(0, bakfilename.IndexOf(".~!") + 3).Remove(bakfilename.Remove(0, bakfilename.IndexOf(".~!") + 3).LastIndexOf("."));
+                            if (File.Exists(folder + "\\" + restoredfilename) == true & File.Exists(bakfilename) == true)
+                            {
+                                File.Delete(folder + "\\" + restoredfilename);
+                                File.Copy(bakfilename, folder + "\\" + restoredfilename);
+                                File.Delete(bakfilename);
+                            }
+                            if (File.Exists(folder + "\\" + restoredfilename) == false & File.Exists(bakfilename) == true)
+                            {
+                                File.Copy(bakfilename, folder + "\\" + restoredfilename);
+                                File.Delete(bakfilename);
+                            }
+                            bakfilename = bakfilename.Remove(bakfilename.IndexOf(".~!"));
+                            bakfilename = bakfilename.Remove(0, bakfilename.LastIndexOf("\\") + 1);
+                            string[] bakfilenamesplited = bakfilename.Split('&');
+                            foreach (string osufilename in bakfilenamesplited)
+                            {
+                                string foundedbg = "";
+                                foreach (string _file in Directory.GetFiles(folder))
                                 {
-                                    using (StreamReader reader = new StreamReader(_file))
+                                    if (_file.IndexOf(".osu") > -1)
                                     {
-                                        string line;
-                                        while ((line = reader.ReadLine()) != null)
+                                        string filename = _file.Remove(0, _file.LastIndexOf("["));
+                                        filename = filename.Remove(filename.LastIndexOf("]") + 1);
+                                        if (_file.IndexOf(osufilename) < 0 & Array.IndexOf(allbakfilenames, filename) < 0)
                                         {
-                                            if (line.IndexOf("0,0,\"") > -1)
+                                            using (StreamReader reader = new StreamReader(_file))
                                             {
-                                                line = line.Remove(0, 5);
-                                                foundedbg = line.Remove(line.LastIndexOf("\""));
-                                                break;
+                                                string line;
+                                                while ((line = reader.ReadLine()) != null)
+                                                {
+                                                    if (line.IndexOf("0,0,\"") > -1)
+                                                    {
+                                                        line = line.Remove(0, 5);
+                                                        foundedbg = line.Remove(line.LastIndexOf("\""));
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            string text = File.ReadAllText(_file);
+                                            text = text.Replace("0,0,\"" + foundedbg + "\",0,0", "0,0,\"\",0,0");
+                                            File.WriteAllText(_file, text);
+                                            if (foundedbg != "" & Array.IndexOf(allrestoredfilenames, foundedbg) < 0)
+                                                File.Delete(folder + "\\" + foundedbg);
+                                        }
+                                        if (_file.IndexOf(osufilename) > -1)
+                                        {
+                                            using (StreamReader reader = new StreamReader(_file))
+                                            {
+                                                string line;
+                                                while ((line = reader.ReadLine()) != null)
+                                                {
+                                                    if (line.IndexOf("0,0,\"") > -1)
+                                                    {
+                                                        line = line.Remove(0, 5);
+                                                        foundedbg = line.Remove(line.LastIndexOf("\""));
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            if (foundedbg != "")
+                                            {
+                                                if (File.Exists(folder + "\\" + foundedbg) == true & foundedbg != restoredfilename)
+                                                    File.Delete(folder + "\\" + foundedbg);
+                                                string text = File.ReadAllText(_file);
+                                                text = text.Replace(foundedbg, restoredfilename);
+                                                File.WriteAllText(_file, text);
+                                            }
+                                            else
+                                            {
+                                                string text = File.ReadAllText(_file);
+                                                text = text.Replace("0,0,\"\",0,0", "0,0,\"" + restoredfilename + "\",0,0");
+                                                File.WriteAllText(_file, text);
                                             }
                                         }
-                                    }
-                                    if (foundedbg != "")
-                                    {
-                                        if (File.Exists(folder + "\\" + foundedbg) == true)
-                                            File.Delete(folder + "\\" + foundedbg);
-                                        string text = File.ReadAllText(_file);
-                                        text = text.Replace(foundedbg, restoredfilename);
-                                        File.WriteAllText(_file, text);
-                                    }
-                                    else
-                                    {
-                                        string text = File.ReadAllText(_file);
-                                        text = text.Replace("0,0,\"\",0,0", "0,0,\"" + restoredfilename + "\",0,0");
-                                        File.WriteAllText(_file, text);
                                     }
                                 }
                             }
@@ -360,22 +429,28 @@ namespace OsuBackgroundChanger
                 Console.WriteLine("2. Delete all backgrounds");
                 Console.WriteLine("3. Restore all backgrounds");
                 Console.Write("Enter : ");
-                switch (Convert.ToInt32(Console.ReadLine()))
+                try
                 {
-                    case 1:
-                        Replace(folderlocation);
-                        break;
+                    switch (Convert.ToInt32(Console.ReadLine()))
+                    {
+                        case 1:
+                            Replace(folderlocation);
+                            break;
 
-                    case 2:
-                        Delete(folderlocation);
-                        break;
+                        case 2:
+                            Delete(folderlocation);
+                            break;
 
-                    case 3:
-                        Restore(folderlocation);
-                        break;
+                        case 3:
+                            Restore(folderlocation);
+                            break;
 
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
+                }
+                catch
+                {
                 }
             }
         }
