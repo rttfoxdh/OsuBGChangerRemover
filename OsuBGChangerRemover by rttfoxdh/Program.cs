@@ -22,19 +22,18 @@ namespace OsuBackgroundChanger
             {
                 foreach (string folder in Directory.GetDirectories(folderlocation))
                 {
-                    int bakcheck = 0;
                     string foundedbg = "";
                     int onlyonetime = 1;
-                    int onlyonetimenothing = 1;
-                    string foundedfixed = "";
-                    string _foundedbg = "";
+                    int bakcheck = 0;
+                    foreach (string __file in Directory.GetFiles(folder))
+                    {
+                        if (__file.IndexOf(".bak") > -1)
+                            bakcheck = 1;
+                    }
                     foreach (string file in Directory.GetFiles(folder))
                     {
-                        if (file.IndexOf(".bak") > -1)
-                            bakcheck = 1;
                         if (file.IndexOf(".osu") > -1)
                         {
-                            int ifnothing = 0;
                             using (StreamReader reader = new StreamReader(file))
                             {
                                 string line;
@@ -45,62 +44,140 @@ namespace OsuBackgroundChanger
                                         line = reader.ReadLine();
                                         foundedbg = line.Remove(0, 5);
                                         foundedbg = foundedbg.Remove(foundedbg.Length - 5, 5);
-                                        if (foundedbg == "")
-                                            ifnothing = 1;
-                                        else
-                                            ifnothing = 0;
                                         break;
                                     }
                                 }
                             }
-                            if (ifnothing == 1)
+                            if (bakcheck == 1)
                             {
-                                if (foundedfixed != "")
-                                    foundedbg = foundedfixed;
-                                else
-                                    foundedbg = bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1);
+                                string text = File.ReadAllText(file);
+                                text = text.Replace(foundedbg, bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
+                                File.WriteAllText(file, text);
+                                if (onlyonetime == 1)
+                                {
+                                    if (File.Exists(folder + "\\" + foundedbg) == true)
+                                        File.Delete(folder + "\\" + foundedbg);
+                                    if (File.Exists(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1)) == true)
+                                    {
+                                        File.Delete(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
+                                        File.Copy(bgfile, folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
+                                    }
+                                    else
+                                        File.Copy(bgfile, folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
+                                    onlyonetime = 0;
+                                }
+                                continue;
+                            }
+                            if (foundedbg == "")
+                            {
+                                foundedbg = bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1);
                                 string _text = File.ReadAllText(file);
                                 _text = _text.Replace("0,0,\"\",0,0", "0,0,\"" + foundedbg + "\",0,0");
                                 File.WriteAllText(file, _text);
-                                if (onlyonetimenothing == 1)
+                                if (onlyonetime == 1)
                                 {
                                     if (File.Exists(folder + "\\" + foundedbg) == true)
                                         File.Delete(folder + "\\" + foundedbg);
                                     File.Copy(bgfile, folder + "\\" + foundedbg);
-                                    onlyonetimenothing = 0;
+                                    onlyonetime = 0;
                                 }
-                                if (foundedfixed == "")
-                                    foundedfixed = foundedbg;
-                                Success();
                             }
                             else
                             {
-                                _foundedbg = foundedbg;
-                                if (foundedfixed != "")
-                                    foundedbg = foundedfixed;
                                 string text = File.ReadAllText(file);
-                                text = text.Replace(_foundedbg, foundedbg.Remove(foundedbg.IndexOf(".") + 1) + bgfile.Remove(0, bgfile.IndexOf(".") + 1));
+                                text = text.Replace(foundedbg, bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
                                 File.WriteAllText(file, text);
-                                if (foundedbg != "" & (onlyonetime == 1 || _foundedbg != foundedfixed))
+                                if (File.Exists(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1)) == false & onlyonetime == 1)
                                 {
-                                    if (bakcheck == 0 & File.Exists(folder + "\\" + _foundedbg + ".bak") == false & File.Exists(folder + "\\" + _foundedbg) == true)
-                                        File.Copy(folder + "\\" + _foundedbg, folder + "\\" + _foundedbg + ".bak");
-                                    if (File.Exists(folder + "\\" + _foundedbg) == true)
-                                        File.Delete(folder + "\\" + _foundedbg);
-                                    if (File.Exists(folder + "\\" + foundedbg) == true)
-                                        File.Delete(folder + "\\" + foundedbg);
-                                    if (File.Exists(folder + "\\" + foundedbg.Remove(foundedbg.IndexOf(".") + 1) + bgfile.Remove(0, bgfile.IndexOf(".") + 1)) == true)
-                                        File.Delete(foundedbg.Remove(foundedbg.IndexOf(".") + 1) + bgfile.Remove(0, bgfile.IndexOf(".") + 1));
-                                    if (foundedfixed == "")
-                                        foundedfixed = foundedbg;
-                                    foundedbg = foundedbg.Remove(foundedbg.IndexOf(".") + 1) + bgfile.Remove(0, bgfile.IndexOf(".") + 1);
-                                    File.Copy(bgfile, folder + "\\" + foundedbg);
+                                    File.Copy(bgfile, folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
                                     onlyonetime = 0;
-                                    Success();
+                                }
+                                if (File.Exists(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1)) == true & onlyonetime == 1 & bakcheck == 0)
+                                {
+                                    int check = 0;
+                                    string filename = "";
+                                    foreach (string _file in Directory.GetFiles(folder))
+                                    {
+                                        if (_file.IndexOf(".osu") > -1)
+                                        {
+                                            using (StreamReader reader = new StreamReader(_file))
+                                            {
+                                                string line;
+                                                while ((line = reader.ReadLine()) != null)
+                                                {
+                                                    if (line.IndexOf("//Background and Video events") > -1)
+                                                    {
+                                                        line = reader.ReadLine();
+                                                        if (bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1) == line.Remove(0, 5).Remove(line.Remove(0, 5).Length - 5, 5))
+                                                        {
+                                                            check = 1;
+                                                            filename = _file;
+                                                            break;
+                                                        }
+                                                    }
+                                                    if (filename != "")
+                                                        break;
+                                                }
+                                                if (filename != "")
+                                                    break;
+                                            }
+                                        }
+                                        if (filename != "")
+                                            break;
+                                    }
+                                    if (check == 0)
+                                    {
+                                        File.Delete(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
+                                        File.Copy(bgfile, folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
+                                        onlyonetime = 0;
+                                    }
+                                    else
+                                    {
+                                        File.Copy(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1), folder + "\\" + filename.Remove(0, filename.LastIndexOf("\\") + 1).Remove(filename.Remove(0, filename.LastIndexOf("\\")).LastIndexOf(".") - 1) + ".~!" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1) + ".bak");
+                                        File.Delete(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
+                                        File.Copy(bgfile, folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
+                                        onlyonetime = 0;
+                                    }
+                                }
+                                if (File.Exists(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1)) == true & onlyonetime == 1 & bakcheck == 1)
+                                {
+                                    File.Delete(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
+                                    File.Copy(bgfile, folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
+                                    onlyonetime = 0;
+                                }
+                                if (File.Exists(folder + "\\" + foundedbg) == true & bakcheck == 0 & foundedbg != bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1))
+                                {
+                                    File.Copy(folder + "\\" + foundedbg, folder + "\\" + file.Remove(0, file.LastIndexOf("\\") + 1).Remove(file.Remove(0, file.LastIndexOf("\\")).LastIndexOf(".") - 1) + ".~!" + foundedbg + ".bak");
+                                    File.Delete(folder + "\\" + foundedbg);
+                                }
+                                else
+                                {
+                                    int itsalreadybak = 0;
+                                    string filename = "";
+                                    foreach (string _file in Directory.GetFiles(folder))
+                                    {
+                                        if (_file.IndexOf(foundedbg) > -1 & _file.Remove(0, _file.LastIndexOf("\\") + 1) != foundedbg)
+                                        {
+                                            filename = _file;
+                                            if (_file.IndexOf(file.Remove(0, file.LastIndexOf("\\") + 1).Remove(file.Remove(0, file.LastIndexOf("\\")).LastIndexOf(".") - 1)) > -1)
+                                            {
+                                                itsalreadybak = 1;
+                                                break;
+                                            }
+                                        }
+                                        if (filename != "")
+                                            break;
+                                    }
+                                    if (filename != "" & itsalreadybak == 0)
+                                    {
+                                        File.Copy(filename, folder + "\\" + file.Remove(0, file.LastIndexOf("\\") + 1).Remove(file.Remove(0, file.LastIndexOf("\\")).LastIndexOf(".") - 1) + "&" + filename.Remove(0, filename.LastIndexOf("\\") + 1));
+                                        File.Delete(filename);
+                                    }
                                 }
                             }
                         }
                     }
+                    Success();
                 }
             }
         }
@@ -109,12 +186,15 @@ namespace OsuBackgroundChanger
         {
             foreach (string folder in Directory.GetDirectories(folderlocation))
             {
-                int bakcheck = 0;
                 string foundedbg = "";
+                int bakcheck = 0;
+                foreach (string __file in Directory.GetFiles(folder))
+                {
+                    if (__file.IndexOf(".bak") > -1)
+                        bakcheck = 1;
+                }
                 foreach (string file in Directory.GetFiles(folder))
                 {
-                    if (file.IndexOf(".bak") > -1)
-                        bakcheck = 1;
                     if (file.IndexOf(".osu") > -1)
                     {
                         using (StreamReader reader = new StreamReader(file))
@@ -134,15 +214,36 @@ namespace OsuBackgroundChanger
                         string text = File.ReadAllText(file);
                         text = text.Remove(text.IndexOf(foundedbg), foundedbg.Length);
                         File.WriteAllText(file, text);
-                        if (foundedbg != "" & File.Exists(folder + "\\" + foundedbg) == true)
+                        if (foundedbg != "" & bakcheck == 0)
                         {
-                            if (bakcheck == 0 & File.Exists(folder + "\\" + foundedbg + ".bak") == false)
-                                File.Copy(folder + "\\" + foundedbg, folder + "\\" + foundedbg + ".bak");
-                            File.Delete(folder + "\\" + foundedbg);
-                            Success();
+                            if (File.Exists(folder + "\\" + foundedbg) == true)
+                            {
+                                File.Copy(folder + "\\" + foundedbg, folder + "\\" + file.Remove(0, file.LastIndexOf("\\") + 1).Remove(file.Remove(0, file.LastIndexOf("\\")).LastIndexOf(".") - 1) + ".~!" + foundedbg + ".bak");
+                                File.Delete(folder + "\\" + foundedbg);
+                            }
+                            else
+                            {
+                                string filename = "";
+                                foreach (string _file in Directory.GetFiles(folder))
+                                {
+                                    if (_file.IndexOf(foundedbg) > -1 & _file.Remove(0, _file.LastIndexOf("\\") + 1) != foundedbg)
+                                    {
+                                        filename = _file;
+                                        break;
+                                    }
+                                }
+                                if (filename != "")
+                                {
+                                    File.Copy(filename, folder + "\\" + file.Remove(0, file.LastIndexOf("\\") + 1).Remove(file.Remove(0, file.LastIndexOf("\\")).LastIndexOf(".") - 1) + "&" + filename.Remove(0, filename.LastIndexOf("\\") + 1));
+                                    File.Delete(filename);
+                                }
+                            }
                         }
+                        if (bakcheck == 1)
+                            File.Delete(folder + "\\" + foundedbg);
                     }
                 }
+                Success();
             }
         }
 
@@ -150,77 +251,72 @@ namespace OsuBackgroundChanger
         {
             foreach (string folder in Directory.GetDirectories(folderlocation))
             {
-                string restorefilename = "";
-                string bakfilename = "";
-                string foundedbg = "";
+                string restoredfilename = "";
                 foreach (string file in Directory.GetFiles(folder))
                 {
+                    string bakfilename = "";
                     if (file.IndexOf(".bak") > -1)
                     {
                         bakfilename = file;
-                        break;
                     }
-                }
-                if (bakfilename != "")
-                {
-                    int onlyonetime = 1;
-                    foreach (string file in Directory.GetFiles(folder))
+                    if (bakfilename != "")
                     {
-                        if (file.IndexOf(".osu") > -1)
+                        restoredfilename = bakfilename.Remove(0, bakfilename.IndexOf(".~!") + 3).Remove(bakfilename.Remove(0, bakfilename.IndexOf(".~!") + 3).LastIndexOf("."));
+                        if (File.Exists(folder + "\\" + restoredfilename) == true & File.Exists(bakfilename) == true)
                         {
-                            using (StreamReader reader = new StreamReader(file))
+                            File.Delete(folder + "\\" + restoredfilename);
+                            File.Copy(bakfilename, folder + "\\" + restoredfilename);
+                            File.Delete(bakfilename);
+                        }
+                        if (File.Exists(folder + "\\" + restoredfilename) == false & File.Exists(bakfilename) == true)
+                        {
+                            File.Copy(bakfilename, folder + "\\" + restoredfilename);
+                            File.Delete(bakfilename);
+                        }
+                        bakfilename = bakfilename.Remove(bakfilename.IndexOf(".~!"));
+                        bakfilename = bakfilename.Remove(0, bakfilename.LastIndexOf("\\") + 1);
+                        string[] bakfilenamesplited = bakfilename.Split('&');
+                        foreach (string osufilename in bakfilenamesplited)
+                        {
+                            string foundedbg = "";
+                            foreach (string _file in Directory.GetFiles(folder))
                             {
-                                string line;
-                                while ((line = reader.ReadLine()) != null)
+                                if (_file.IndexOf(osufilename) > -1)
                                 {
-                                    if (line.IndexOf("//Background and Video events") > -1)
+                                    using (StreamReader reader = new StreamReader(_file))
                                     {
-                                        line = reader.ReadLine();
-                                        foundedbg = line.Remove(0, 5);
-                                        foundedbg = foundedbg.Remove(foundedbg.Length - 5, 5);
-                                        break;
+                                        string line;
+                                        while ((line = reader.ReadLine()) != null)
+                                        {
+                                            if (line.IndexOf("//Background and Video events") > -1)
+                                            {
+                                                line = reader.ReadLine();
+                                                line = line.Remove(0, 5);
+                                                foundedbg = line.Remove(line.LastIndexOf("\""));
+                                                break;
+                                            }
+                                        }
                                     }
-                                }
-                            }
-                            if (foundedbg != "")
-                            {
-                                string text = File.ReadAllText(file);
-                                restorefilename = bakfilename.Remove(0, bakfilename.LastIndexOf("\\") + 1);
-                                restorefilename = restorefilename.Remove(restorefilename.LastIndexOf("."));
-                                text = text.Replace(foundedbg, restorefilename);
-                                File.WriteAllText(file, text);
-                                if (onlyonetime == 1)
-                                {
-                                    if (File.Exists(folder + "\\" + restorefilename) == true)
-                                        File.Delete(folder + "\\" + restorefilename);
-                                    if (File.Exists(folder + "\\" + foundedbg) == true)
-                                        File.Delete(folder + "\\" + foundedbg);
-                                    File.Copy(bakfilename, folder + "\\" + restorefilename);
-                                    File.Delete(bakfilename);
-                                    onlyonetime = 0;
-                                    Success();
-                                }
-                            }
-                            else
-                            {
-                                string text = File.ReadAllText(file);
-                                restorefilename = bakfilename.Remove(0, bakfilename.LastIndexOf("\\") + 1);
-                                restorefilename = restorefilename.Remove(restorefilename.LastIndexOf("."));
-                                text = text.Replace("0,0,\"\",0,0", "0,0,\"" + restorefilename + "\",0,0");
-                                File.WriteAllText(file, text);
-                                if (onlyonetime == 1)
-                                {
-                                    if (File.Exists(folder + "\\" + restorefilename) == true)
-                                        File.Delete(folder + "\\" + restorefilename);
-                                    File.Copy(bakfilename, folder + "\\" + restorefilename);
-                                    File.Delete(bakfilename);
-                                    onlyonetime = 0;
-                                    Success();
+                                    if (foundedbg != "")
+                                    {
+                                        if (File.Exists(folder + "\\" + foundedbg) == true)
+                                            File.Delete(folder + "\\" + foundedbg);
+                                        string text = File.ReadAllText(_file);
+                                        text = text.Replace(foundedbg, restoredfilename);
+                                        File.WriteAllText(_file, text);
+                                    }
+                                    else
+                                    {
+                                        string text = File.ReadAllText(_file);
+                                        text = text.Replace("0,0,\"\",0,0", "0,0,\"" + restoredfilename + "\",0,0");
+                                        File.WriteAllText(_file, text);
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                Success();
             }
         }
 
@@ -256,7 +352,7 @@ namespace OsuBackgroundChanger
                 Console.WriteLine("1. Replace all backgrounds");
                 Console.WriteLine("2. Delete all backgrounds");
                 Console.WriteLine("3. Restore all backgrounds");
-                Console.Write("Enter: ");
+                Console.Write("Enter : ");
                 switch (Convert.ToInt32(Console.ReadLine()))
                 {
                     case 1:
