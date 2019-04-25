@@ -32,6 +32,7 @@ namespace OsuBackgroundChanger
                     }
                     foreach (string file in Directory.GetFiles(folder))
                     {
+                        string version = "";
                         if (file.IndexOf(".osu") > -1)
                         {
                             using (StreamReader reader = new StreamReader(file))
@@ -39,9 +40,12 @@ namespace OsuBackgroundChanger
                                 string line;
                                 while ((line = reader.ReadLine()) != null)
                                 {
-                                    if (line.IndexOf("//Background and Video events") > -1)
+                                    if (line.IndexOf("Version:") > -1)
                                     {
-                                        line = reader.ReadLine();
+                                        version = line.Remove(0, 8);
+                                    }
+                                    if (line.IndexOf("0,0,\"") > -1)
+                                    {
                                         foundedbg = line.Remove(0, 5);
                                         foundedbg = foundedbg.Remove(foundedbg.Length - 5, 5);
                                         break;
@@ -105,9 +109,8 @@ namespace OsuBackgroundChanger
                                                 string line;
                                                 while ((line = reader.ReadLine()) != null)
                                                 {
-                                                    if (line.IndexOf("//Background and Video events") > -1)
+                                                    if (line.IndexOf("0,0,\"") > -1)
                                                     {
-                                                        line = reader.ReadLine();
                                                         if (bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1) == line.Remove(0, 5).Remove(line.Remove(0, 5).Length - 5, 5))
                                                         {
                                                             check = 1;
@@ -133,7 +136,7 @@ namespace OsuBackgroundChanger
                                     }
                                     else
                                     {
-                                        File.Copy(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1), folder + "\\" + filename.Remove(0, filename.LastIndexOf("\\") + 1).Remove(filename.Remove(0, filename.LastIndexOf("\\")).LastIndexOf(".") - 1) + ".~!" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1) + ".bak");
+                                        File.Copy(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1), folder + "\\" + version + "].~!" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1) + ".bak");
                                         File.Delete(folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
                                         File.Copy(bgfile, folder + "\\" + bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1));
                                         onlyonetime = 0;
@@ -147,7 +150,7 @@ namespace OsuBackgroundChanger
                                 }
                                 if (File.Exists(folder + "\\" + foundedbg) == true & bakcheck == 0 & foundedbg != bgfile.Remove(0, bgfile.LastIndexOf("\\") + 1))
                                 {
-                                    File.Copy(folder + "\\" + foundedbg, folder + "\\" + file.Remove(0, file.LastIndexOf("\\") + 1).Remove(file.Remove(0, file.LastIndexOf("\\")).LastIndexOf(".") - 1) + ".~!" + foundedbg + ".bak");
+                                    File.Copy(folder + "\\" + foundedbg, folder + "\\[" + version + "].~!" + foundedbg + ".bak");
                                     File.Delete(folder + "\\" + foundedbg);
                                 }
                                 else
@@ -159,18 +162,19 @@ namespace OsuBackgroundChanger
                                         if (_file.IndexOf(foundedbg) > -1 & _file.Remove(0, _file.LastIndexOf("\\") + 1) != foundedbg)
                                         {
                                             filename = _file;
-                                            if (_file.IndexOf(file.Remove(0, file.LastIndexOf("\\") + 1).Remove(file.Remove(0, file.LastIndexOf("\\")).LastIndexOf(".") - 1)) > -1)
+                                            if (_file.IndexOf(version) > -1)
                                             {
                                                 itsalreadybak = 1;
                                                 break;
                                             }
+                                            break;
                                         }
                                         if (filename != "")
                                             break;
                                     }
                                     if (filename != "" & itsalreadybak == 0)
                                     {
-                                        File.Copy(filename, folder + "\\" + file.Remove(0, file.LastIndexOf("\\") + 1).Remove(file.Remove(0, file.LastIndexOf("\\")).LastIndexOf(".") - 1) + "&" + filename.Remove(0, filename.LastIndexOf("\\") + 1));
+                                        File.Copy(filename, folder + "\\[" + version + "]&" + filename.Remove(0, filename.LastIndexOf("\\") + 1));
                                         File.Delete(filename);
                                     }
                                 }
@@ -195,6 +199,7 @@ namespace OsuBackgroundChanger
                 }
                 foreach (string file in Directory.GetFiles(folder))
                 {
+                    string version = "";
                     if (file.IndexOf(".osu") > -1)
                     {
                         using (StreamReader reader = new StreamReader(file))
@@ -202,9 +207,12 @@ namespace OsuBackgroundChanger
                             string line;
                             while ((line = reader.ReadLine()) != null)
                             {
-                                if (line.IndexOf("//Background and Video events") > -1)
+                                if (line.IndexOf("Version:") > -1)
                                 {
-                                    line = reader.ReadLine();
+                                    version = line.Remove(0, 8);
+                                }
+                                if (line.IndexOf("0,0,\"") > -1)
+                                {
                                     foundedbg = line.Remove(0, 5);
                                     foundedbg = foundedbg.Remove(foundedbg.Length - 5, 5);
                                     break;
@@ -218,7 +226,7 @@ namespace OsuBackgroundChanger
                         {
                             if (File.Exists(folder + "\\" + foundedbg) == true)
                             {
-                                File.Copy(folder + "\\" + foundedbg, folder + "\\" + file.Remove(0, file.LastIndexOf("\\") + 1).Remove(file.Remove(0, file.LastIndexOf("\\")).LastIndexOf(".") - 1) + ".~!" + foundedbg + ".bak");
+                                File.Copy(folder + "\\" + foundedbg, folder + "\\[" + version + "].~!" + foundedbg + ".bak");
                                 File.Delete(folder + "\\" + foundedbg);
                             }
                             else
@@ -234,7 +242,7 @@ namespace OsuBackgroundChanger
                                 }
                                 if (filename != "")
                                 {
-                                    File.Copy(filename, folder + "\\" + file.Remove(0, file.LastIndexOf("\\") + 1).Remove(file.Remove(0, file.LastIndexOf("\\")).LastIndexOf(".") - 1) + "&" + filename.Remove(0, filename.LastIndexOf("\\") + 1));
+                                    File.Copy(filename, folder + "\\[" + version + "]&" + filename.Remove(0, filename.LastIndexOf("\\") + 1));
                                     File.Delete(filename);
                                 }
                             }
@@ -288,9 +296,8 @@ namespace OsuBackgroundChanger
                                         string line;
                                         while ((line = reader.ReadLine()) != null)
                                         {
-                                            if (line.IndexOf("//Background and Video events") > -1)
+                                            if (line.IndexOf("0,0,\"") > -1)
                                             {
-                                                line = reader.ReadLine();
                                                 line = line.Remove(0, 5);
                                                 foundedbg = line.Remove(line.LastIndexOf("\""));
                                                 break;
